@@ -1,0 +1,6 @@
+#ifndef MESSAGESCONFIG_H
+#define MESSAGESCONFIG_H
+
+#define MAX_MESSAGES 5
+
+#endif
