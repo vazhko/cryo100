@@ -48,10 +48,9 @@ void display_task(void) {
 					//print_a_b(str1, f_curr_TW[i * 2], 3, sensors[sens_no].z);
 					//print_a_b(str2, f_curr_TW[i * 2 + 1], 3, sensors[sens_no].z);
 
-					print_a_b_min_max(str1, f_curr_TW[i * 2], sensors[sens_no].min, sensors[sens_no].max, 3, sensors[sens_no].z);
-					print_a_b_min_max(str2, f_curr_TW[i * 2 + 1], sensors[sens_no].min, sensors[sens_no].max, 3, sensors[sens_no].z);
-
-					sprintf(str, "%s%s%s%s", str1, sensors[sens_no].s_units, str2, sensors[sens_no].s_units);
+					//print_a_b_min_max(str1, f_curr_TW[i * 2], sensors[sens_no].min, sensors[sens_no].max, 3, sensors[sens_no].z);
+					//print_a_b_min_max(str2, f_curr_TW[i * 2 + 1], sensors[sens_no].min, sensors[sens_no].max, 3, sensors[sens_no].z);
+					//sprintf(str, "%s%s%s%s", str1, sensors[sens_no].s_units, str2, sensors[sens_no].s_units);
 					lcd_puts_ex(str);
 				}
 
@@ -92,8 +91,27 @@ void ch_setup(UCHAR ch) {
 }
 
 /******************************************************************************************/
-void main(void) {
+double volatile  temp;
 
+void main(void) {
+    
+    
+    temp = R2T(0, 3625);
+    printf("%f", temp);
+    Nop();
+    temp = R2T(1, 1482.9);
+    printf("%f", temp);
+    Nop();
+    temp = R2T(2, 577.2);
+    Nop();
+    temp = R2T(3, 361);
+    Nop();   
+    temp = R2T(4, 110.7);
+    Nop();
+    temp = R2T(5, 12159);
+    Nop();   
+    
+       
 	LATA = 0;
 	LATB = 0;
 	LATC = 0;
@@ -153,11 +171,11 @@ void main(void) {
 
 	lcd_goto(0, 0);
 	lcd_puts(CVER);
-	EE_TO_RAM(PB_SENS_NO, sens_no);
+	///EE_TO_RAM(PB_SENS_NO, sens_no);
 	lcd_goto(0, 2);
-	lcd_puts_ex(sensors[sens_no].s_name);
+	//lcd_puts_ex(sensors[sens_no].s_name);
 	DelayS(4);
-
+/*
 	if (sensors[sens_no].gain == 2) {
 		adc_init(BIAS_DISABLE | BURNOUT_CURRENT_OFF | BIPOLAR | BOOST_OFF | GAIN_2,
 				INT_REF | BUFFER_ON | CH0, ARATE_240_MODE_L, 0);
@@ -165,6 +183,7 @@ void main(void) {
 		adc_init(BIAS_DISABLE | BURNOUT_CURRENT_OFF | BIPOLAR | BOOST_OFF | GAIN_16,
 				INT_REF | BUFFER_ON | CH0, ARATE_240_MODE_L, 0);
 	}
+*/
 
 
 	cmd_begin = 1;
@@ -201,8 +220,8 @@ void mesure_task(void) {
 	double f_z, f_Zero, f_U_Ref, f_I_Ref, f_temp;
 	DWORD code;
 
-	EE_TO_RAM(PF_U_REF, f_U_Ref);
-	EE_TO_RAM(PF_ZERO, f_Zero);
+	//EE_TO_RAM(PF_U_REF, f_U_Ref);
+	//EE_TO_RAM(PF_ZERO, f_Zero);
 
 	cmd_adc = 1;
 	if (cmd_adc) {
@@ -212,10 +231,11 @@ void mesure_task(void) {
 		}
 
 		ch_setup(ch);
-		EE_TO_RAM((PF_Z0 + ch * 4), f_z);
+		//EE_TO_RAM((PF_Z0 + ch * 4), f_z);
 		DelayMs(150);
 
 		adc_start();
+        /*
 		if (sensors[sens_no].gain == 2) {
 			EE_TO_RAM(PF_I_REF1, f_I_Ref);
 			code = adc_get_ex(BIAS_DISABLE | BURNOUT_CURRENT_OFF | BIPOLAR | BOOST_OFF | GAIN_2,
@@ -225,10 +245,12 @@ void mesure_task(void) {
 			code = adc_get_ex(BIAS_DISABLE | BURNOUT_CURRENT_OFF | BIPOLAR | BOOST_OFF | GAIN_16,
 					INT_REF | BUFFER_ON | CH0, ARATE_240_MODE_L | INT_CLK_PIN_MODE_L);
 		}
+
 		f_temp = ((double) code - 0x7fffff) * 2.0 * f_U_Ref / f_I_Ref / (double) sensors[sens_no].gain / 0xffffff + f_Zero + f_z;
 		adc_stop();
 
 		f_curr_TW[ch] = eval_poly(f_temp, sensors[sens_no].coeff, sensors[sens_no].n - 1);
+        */        
 
 #ifdef USE_SLIDE_FILTER
 		if (cmd_begin) filter_ini(f_curr_TW[ch], ch);
@@ -276,7 +298,7 @@ void disp_menu(void) {
 	LCD_CLS();
 	for (i = 0; i < 4; i++) {
 		lcd_goto(0, i);
-		lcd_puts_ex(sensors[get_first_string_menu(sens_no) + i].s_name);
+		//lcd_puts_ex(sensors[get_first_string_menu(sens_no) + i].s_name);
 	}
 	lcd_goto(0, get_arrow_pos(sens_no));
 	lcd_putc('*');
@@ -301,12 +323,13 @@ void menu_task(void) {
 					curr_state = ST_SENS;
 					disp_menu();
 				} else {
-
+/*
 					if (sensors[sens_no].gain == 2) {
 						curr_adr = PF_I_REF1;
 					} else if (sensors[sens_no].gain == 16) {
 						curr_adr = PF_I_REF2;
 					}
+                    */
 
 					if (g_mode_coeff == 0) {
 						g_mode_coeff = 1;
@@ -371,6 +394,7 @@ void menu_task(void) {
 		case ST_SENS:
 			if (GetMessage(MSG_KEY_LONG_PRESSED)) {
 				curr_state = ST_NORM;
+/*                
 				RAM_TO_EE(PB_SENS_NO, sens_no);
 				LCD_CLS();
 
@@ -382,6 +406,7 @@ void menu_task(void) {
 					adc_init(BIAS_DISABLE | BURNOUT_CURRENT_OFF | BIPOLAR | BOOST_OFF | GAIN_16,
 							INT_REF | BUFFER_ON | CH0, ARATE_240_MODE_L, 0);
 				}
+                */
 			}
 
 			if (GetMessage(MSG_KEY_P_PRESSED)) {
@@ -425,7 +450,7 @@ void disp_info(BYTE mode) {
 		lcd_putc('8');
 	} else {
 		lcd_goto(0, 1);
-		lcd_puts_ex(sensors[sens_no].s_name);
+		//lcd_puts_ex(sensors[sens_no].s_name);
 	}
 
 }
