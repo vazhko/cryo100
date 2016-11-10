@@ -132,8 +132,10 @@ void main(void) {
 	uart_init();
 
 	TRISA = 0b00110010;
-	TRISB = 0b11000011;
-	TRISC = 0b10010000;
+	TRISB = 0b01000011;
+	TRISC = 0b00010000;
+    
+    putstr("ura\r\n");
 
 	ch_setup(7);
 	// кнопки
@@ -174,7 +176,7 @@ void main(void) {
 	///EE_TO_RAM(PB_SENS_NO, sens_no);
 	lcd_goto(0, 2);
 	//lcd_puts_ex(sensors[sens_no].s_name);
-	DelayS(4);
+	//DelayS(4);
 /*
 	if (sensors[sens_no].gain == 2) {
 		adc_init(BIAS_DISABLE | BURNOUT_CURRENT_OFF | BIPOLAR | BOOST_OFF | GAIN_2,
@@ -198,6 +200,8 @@ void main(void) {
 
 
 	while (1) {
+        
+        putstr("ura\r\n");
 
 		CLRWDT();
 		menu_task();

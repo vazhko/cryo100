@@ -11,13 +11,15 @@
 
 //#define USE_BRGH16
 #define BRGH_VAL                        1
-#define BAUD				115200
+#define BAUD				9600
 #if BRGH_VAL == 0
 #define UART_DIVIDER 			((int)(CLOCK_FREQ/(64UL * BAUD) -1))
 #else
 #define UART_DIVIDER 			((int)(CLOCK_FREQ/(16UL * BAUD) -1))
 #endif
 
+#define TX_EN LATB7
+#define TX_EN_TRIS TRISB7
 
 
 #define INPUT_PIN 1
