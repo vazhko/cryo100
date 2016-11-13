@@ -73,6 +73,13 @@ extern volatile int sys_tick;
 
 void Task_Buttons_(void);
 
+/***************************************************************************************/
+/*
+void crc_send(unsigned int crc) {
+	putbyte((unsigned char) (crc >> 8));
+	putbyte((unsigned char) crc);
+}
+*/
 
 /***************************************************************************************/
 
@@ -263,6 +270,7 @@ error:
 
 /***************************************************************************************/
 // частота подобрана
+
 void interrupt low_priority LOW_ISR(void) {
 
 	static BYTE btn_counter;
