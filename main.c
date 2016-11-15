@@ -7,12 +7,17 @@
 #include 	<pic18.h>
 #include 	<stdlib.h>
 #include 	<stdio.h>
+#include	<string.h>
 #include 	<math.h>
 
 #include 	"main.h"
 /******************************************************************************************/
 /*Global var*/
 #include 	"var.c"
+
+
+
+DATA data;
 
 volatile int sys_tick;
 BYTE sens_no = 0;
@@ -52,13 +57,13 @@ void display_task(void){
                         EE_TO_RAM(PF_R1_MIN + (i * 2 + j) * 4, f_min);
                         EE_TO_RAM(PF_R1_MAX + (i * 2 + j) * 4, f_max);
 
-                        if(f_curr_R[i * 2 + j] > f_max){
+                        if(data.f_curr_R[i * 2 + j] > f_max){
                             sprintf(pstr[j], "T%d<25.0", i * 2 + j + 1);
-                        } else if(f_curr_R[i * 2 + j] < f_min){
+                        } else if(data.f_curr_R[i * 2 + j] < f_min){
                             sprintf(pstr[j], "T%d>80.0", i * 2 + j + 1);
                         } else {
                             sprintf(pstr[j], "T%d=", i * 2 + j + 1);
-                            print_a_b(&pstr[j][3], f_curr_T[i * 2 + j], 1, 1);
+                            print_a_b(&pstr[j][3], data.f_curr_T[i * 2 + j], 1, 1);
                         }
                     }
                     sprintf(str, "%s%s%s%s", pstr[0], " ", pstr[1], " ");
@@ -71,7 +76,7 @@ void display_task(void){
             } else {
                 for(i = 0; i < 3; i ++){
                     for(j = 0; j < 2; j ++){
-                        sprintf(pstr[j], "%d %05u ", i * 2 + j + 1, (WORD)f_curr_R[i * 2 + j]);
+                        sprintf(pstr[j], "%d %05u ", i * 2 + j + 1, (WORD)data.f_curr_R[i * 2 + j]);
                         //print_a_b(&pstr[j][2], f_curr_T[i * 2 + j], 4, 1);
                     }
                     sprintf(str, "%s%s", pstr[0], pstr[1]);
@@ -113,6 +118,7 @@ void main(void){
     LATA = 0;
     LATB = 0;
     LATC = 0;
+    memset(&data, 0, sizeof(data));
 
     // internal ADC off
 #if defined(_18F452)
@@ -174,7 +180,7 @@ void main(void){
     //lcd_puts_ex(sensors[sens_no].s_name);
     DelayS(1);
     adc_init(BIAS_DISABLE | BURNOUT_CURRENT_OFF | BIPOLAR | BOOST_OFF | GAIN_1,
-            EXT_REF | BUFFER_ON | CH0, ARATE_240_MODE_L, 0);
+            EXT_REF | BUFFER_ON | CH0, ARATE_320_MODE_L, 0);
 
     DelayS(1);
 
@@ -212,11 +218,13 @@ void mesure_task(void){
 
     static BYTE ch;
     double f_z, f_Zero, f_U_Ref, f_I_Ref, f_temp;
-    DWORD code;
-
-    //EE_TO_RAM(PF_U_REF, f_U_Ref);
+    DWORD code, d_temp;
+    WORD w_temp;
+    BYTE a, b;
+    
+    EE_TO_RAM(PF_UREF, f_U_Ref);
     //EE_TO_RAM(PF_ZERO, f_Zero);
-    f_U_Ref = 2.49;
+    //f_U_Ref = 2.49;
     f_Zero = 0.0;
     f_z = 0.0;
     f_I_Ref = 100E-6;
@@ -234,7 +242,7 @@ void mesure_task(void){
 
         adc_start();
         code = adc_get_ex(BIAS_DISABLE | BURNOUT_CURRENT_OFF | BIPOLAR | BOOST_OFF | GAIN_1,
-                EXT_REF | BUFFER_ON | CH0, ARATE_240_MODE_L | INT_CLK_PIN_MODE_L);
+                EXT_REF | BUFFER_ON | CH0, ARATE_320_MODE_L | INT_CLK_PIN_MODE_L);
 
         f_temp = ((double)code - 0x7fffff) * 2.0 * f_U_Ref / f_I_Ref / 0xffffff + f_Zero + f_z;
         adc_stop();
@@ -248,12 +256,45 @@ void mesure_task(void){
 #endif
         // «апись данных в основные переменные
         di();
-        f_curr_R[ch] = f_temp;
+        data.f_curr_R[ch] = f_temp;
         ei();
         f_temp = R2T(ch, f_temp);
         di();
-        f_curr_T[ch] = f_temp;
+        data.f_curr_T[ch] = f_temp;
         ei();
+        
+        w_temp = (WORD)(data.f_curr_T[ch] * 100.0);
+        a = BYTE_0(w_temp);
+        b = BYTE_1(w_temp);
+        BYTE_0(w_temp) = b;
+        BYTE_1(w_temp) = a;
+        di();
+        data.w_curr_T[ch] = w_temp;
+        ei();
+        w_temp = (WORD)data.f_curr_R[ch];
+        a = BYTE_0(w_temp);
+        b = BYTE_1(w_temp);
+        BYTE_0(w_temp) = b;
+        BYTE_1(w_temp) = a;
+        di();
+        data.w_curr_R[ch] = w_temp;
+        ei();         
+        
+        BYTE_3(d_temp) = BYTE_0(data.f_curr_T[ch]);
+        BYTE_2(d_temp) = BYTE_1(data.f_curr_T[ch]);
+        BYTE_1(d_temp) = BYTE_2(data.f_curr_T[ch]);
+        BYTE_0(d_temp) = BYTE_3(data.f_curr_T[ch]);         
+        di();
+        data.d_curr_T[ch] = d_temp;
+        ei();
+        
+        BYTE_3(d_temp) = BYTE_0(data.f_curr_R[ch]);
+        BYTE_2(d_temp) = BYTE_1(data.f_curr_R[ch]);
+        BYTE_1(d_temp) = BYTE_2(data.f_curr_R[ch]);
+        BYTE_0(d_temp) = BYTE_3(data.f_curr_R[ch]);         
+        di();
+        data.d_curr_R[ch] = d_temp;
+        ei();       
 
         (ch < 5) ? ch ++ : ch = 0;
 

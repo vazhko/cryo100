@@ -68,8 +68,10 @@ CRCH
  */
 
 
-extern double f_curr_T[8];
+//extern double f_curr_T[8], f_curr_R[8];
+//extern WORD w_curr_T[8], w_curr_R[8];
 extern volatile int sys_tick;
+extern DATA data;
 
 void Task_Buttons_(void);
 
@@ -86,6 +88,7 @@ void crc_send(unsigned int crc) {
 BYTE RxTxBuff[73]; // RX/TX буффер
 unsigned int iCs; // CRC
 BYTE cData, cAdr, *lp_p;
+WORD wAdr, wData;
 
 
 static WORD iStart, iStop; // для расчета адресов перадачи из архива
@@ -102,7 +105,7 @@ void send_measured_data(void) {
 	putbyte(crc_mb_calc(&iCs, 0x45));
 
 	for (i = 0; i < 8; i++) {
-		lp_p = (BYTE*) & f_curr_T[i];
+		lp_p = (BYTE*) & data.f_curr_T[i];
 		NOP();
 		putbyte(crc_mb_calc(&iCs, *lp_p++));
 		putbyte(crc_mb_calc(&iCs, *lp_p++));
@@ -129,6 +132,8 @@ static void interrupt HI_ISR(void) {
 		//Принимаем
 		// адрес
 		RxTxBuff[0] = timed_getc();
+        NOP();
+        NOP();
 		if (RxTxBuff[0] == 0xEA) RESET();
 		if ((RxTxBuff[0] != RS232_ADR)) goto error;
 		if ((FERR) || (OERR)) goto error;
@@ -137,6 +142,8 @@ static void interrupt HI_ISR(void) {
 		RxTxBuff[1] = timed_getc();
 		if ((FERR) || (OERR)) goto error;
 		if (timeout_error) goto error;
+        NOP();
+        NOP();
 
 		// обрабатываем комманду
 		switch (RxTxBuff[1]) {
@@ -228,10 +235,27 @@ static void interrupt HI_ISR(void) {
 					RxTxBuff[5] *= 2; // преобраз количество регистров в байты
 					putbyte(crc_mb_calc(&iCs, RxTxBuff[5]));
 					// Передача данных с извлечением
-					for (cAdr = RxTxBuff[3]; cAdr < (RxTxBuff[5] + RxTxBuff[3]); cAdr++) {
-						cData = EEPROM_READ(cAdr);
-						putbyte(crc_mb_calc(&iCs, cData));
-					}
+                    wAdr = RxTxBuff[3] | ((WORD)RxTxBuff[2] << 8);
+                    if(wAdr <= 0xff){
+                        for (cAdr = RxTxBuff[3]; cAdr < (RxTxBuff[5] + RxTxBuff[3]); cAdr++) {
+                            cData = EEPROM_READ(cAdr);
+                            putbyte(crc_mb_calc(&iCs, cData));
+                        }
+                    } else if (wAdr < 0x2ff){
+                        lp_p = (BYTE*) & data.d_curr_T[0];
+                        wAdr &= 0x003f;
+                        lp_p += wAdr;
+                        for (cAdr = RxTxBuff[3]; cAdr < (RxTxBuff[5] + RxTxBuff[3]); cAdr++) {
+                            putbyte(crc_mb_calc(&iCs, *lp_p++));                            
+                        }                        
+                    } else if (wAdr < 0x3ff){
+                        lp_p = (BYTE*) & data.w_curr_T[0];
+                        wAdr &= 0x003f;
+                        lp_p += wAdr;
+                        for (cAdr = RxTxBuff[3]; cAdr < (RxTxBuff[5] + RxTxBuff[3]); cAdr++) {
+                            putbyte(crc_mb_calc(&iCs, *lp_p++));                          
+                        } 
+                    }
 				}
 				// передача КС
 				crc_send(iCs);
@@ -250,7 +274,9 @@ static void interrupt HI_ISR(void) {
 				break;
 
 			case 0x48: // чтение выбраных измеренных данных (из пользовательских комманд)
-				putstr(__DATE__);
+				NOP();
+                NOP();
+                putstr(__DATE__);
 
 				break;
 

@@ -17,7 +17,7 @@
       <itemPath>../lib/ad7793.h</itemPath>
       <itemPath>../lib/GenericTypeDefs.h</itemPath>
       <itemPath>../lib/buttons.h</itemPath>
-      <itemPath>../MessagesConfig.h</itemPath>
+      <itemPath>../eeprom.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"

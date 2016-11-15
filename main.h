@@ -43,3 +43,14 @@ typedef enum {
    ST_CALIBR,
 } ST;
 
+typedef struct {
+    double f_curr_T[8]; 
+    double f_curr_R[8];
+    DWORD d_curr_T[8];
+    DWORD d_curr_R[8];
+    DWORD d_curr_D[8];
+    WORD w_curr_T[8]; 
+    WORD w_curr_R[8];
+    WORD w_curr_D[8];
+} DATA;
+

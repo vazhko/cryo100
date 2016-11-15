@@ -3,6 +3,16 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/1"/>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group/>
+        <group>
+            <file>file:/E:/_work/_actual_prj/cryo/xc8/eeprom.h</file>
+            <file>file:/E:/_work/_actual_prj/cryo/xc8/lib/ad7793.h</file>
+            <file>file:/E:/_work/_actual_prj/cryo/xc8/main.h</file>
+            <file>file:/E:/_work/_actual_prj/cryo/xc8/main.c</file>
+            <file>file:/E:/_work/_actual_prj/cryo/xc8/lib/usart.c</file>
+            <file>file:/E:/_work/_actual_prj/cryo/xc8/var.c</file>
+            <file>file:/E:/_work/_actual_prj/cryo/xc8/lib/macro.h</file>
+            <file>file:/E:/_work/_actual_prj/cryo/xc8/isr.c</file>
+            <file>file:/E:/_work/_actual_prj/cryo/xc8/lib/ad7793.c</file>
+        </group>
     </open-files>
 </project-private>
